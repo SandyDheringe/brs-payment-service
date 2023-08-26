@@ -1,0 +1,10 @@
+
+spring:
+  application:
+    name: brs-payment-service
+  profiles:
+    active: dev
+  config:
+    import: configserver:http://localhost:8071
+
+
