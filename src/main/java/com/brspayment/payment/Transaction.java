@@ -1,10 +1,12 @@
 package com.brspayment.payment;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -16,23 +18,13 @@ public class Transaction {
     @Column(name = "transaction_id", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "payment_id", nullable = false)
-    private Payment payment;
+    @Column(name = "booking_id", nullable = false)
+    private Integer bookingId;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     @Column(name = "transaction_date")
-    private Instant transactionDate;
+    private LocalDateTime transactionDate;
 
-    @Column(name = "transaction_type", length = 50)
-    private String transactionType;
-
-    @Column(name = "transaction_amount")
-    private Float transactionAmount;
-
-    @Column(name = "transaction_status", length = 20)
-    private String transactionStatus;
-
-    @Column(name = "transaction_details", length = 100)
-    private String transactionDetails;
-
+    @Column(name = "transaction_event", length = 100)
+    private TransactionEvent transactionEvent;
 }

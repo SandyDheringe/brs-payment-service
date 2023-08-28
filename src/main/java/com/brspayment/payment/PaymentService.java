@@ -1,10 +1,11 @@
 package com.brspayment.payment;
 
 import com.brspayment.exception.BRSException;
-import com.brspayment.util.MessageBroker;
+import com.brspayment.messages.BookingMessage;
+import com.brspayment.messages.BusBookingMessage;
+import com.brspayment.messages.MessageBroker;
+import com.brspayment.messages.MessageDestinationConst;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 
@@ -17,17 +18,21 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
 
     private final MessageBroker messageBroker;
+    private final TransactionRepository transactionRepository;
 
     @Autowired
     PaymentService(PaymentRepository paymentRepository,
-                   MessageBroker messageBroker) {
+                   MessageBroker messageBroker,
+                   TransactionRepository transactionRepository) {
         this.paymentRepository = paymentRepository;
         this.messageBroker = messageBroker;
+        this.transactionRepository = transactionRepository;
     }
 
-    @JmsListener(destination = "brsqueue")
-    public void receiveMessage(String message) {
+    @JmsListener(destination = MessageDestinationConst.DEST_PROCESS_PAYMENT)
+    public void receiveMessage(BookingMessage bookingMessage) {
         Payment payment = new Payment();
+        payment.setBookingId(bookingMessage.getBookingId());
         payment.setPaymentDate(LocalDateTime.now());
         payment.setPaymentAmount(100f);
         payment.setPaymentStatus(PaymentStatus.PENDING);
@@ -35,19 +40,26 @@ public class PaymentService {
         paymentRepository.save(payment);
     }
 
-
     public void processPayment(PaymentRequest paymentRequest) {
-        Payment payment = paymentRepository.findByBookingId(paymentRequest.getBookingId()).orElse(null);
-        if (payment == null) {
+        Payment pendingPayment = paymentRepository.findByBookingId(paymentRequest.getBookingId()).orElse(null);
+        if (pendingPayment == null) {
             throw new BRSException(String.format("Payment for booking %d not found", paymentRequest.getBookingId()));
         }
 
-        payment.setPaymentAmount(paymentRequest.getPaymentAmount());
-        payment.setPaymentMethod(paymentRequest.getPaymentMethod());
-        payment.setPaymentStatus(PaymentStatus.COMPLETED);
-        payment.setPaymentDate(LocalDateTime.now());
-        paymentRepository.saveAndFlush(payment);
-        messageBroker.sendMessage("brsqueue","booking id="+paymentRequest.getBookingId());
+        pendingPayment.setPaymentAmount(paymentRequest.getPaymentAmount());
+        pendingPayment.setPaymentMethod(paymentRequest.getPaymentMethod());
+        pendingPayment.setPaymentStatus(PaymentStatus.COMPLETED);
+        pendingPayment.setPaymentDate(LocalDateTime.now());
+        paymentRepository.saveAndFlush(pendingPayment);
+
+        Transaction transaction = new Transaction();
+        transaction.setBookingId(paymentRequest.getBookingId());
+        transaction.setTransactionDate(LocalDateTime.now());
+        transaction.setTransactionEvent(TransactionEvent.BOOKING_CONFIRMED);
+        transactionRepository.saveAndFlush(transaction);
+
+        messageBroker.sendInventoryUpdateMessage(MessageDestinationConst.DEST_UPDATE_INVENTORY,
+                new BusBookingMessage(paymentRequest.getBookingId(), paymentRequest.getBusId()));
 
     }
 }
