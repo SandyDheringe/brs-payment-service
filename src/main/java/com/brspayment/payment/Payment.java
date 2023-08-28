@@ -28,9 +28,11 @@ public class Payment {
     @Column(name = "payment_amount")
     private Float paymentAmount;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_status", length = 10)
     private PaymentStatus paymentStatus;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = 20)
     private PaymentMethod paymentMethod;
 

@@ -25,6 +25,7 @@ public class Transaction {
     @Column(name = "transaction_date")
     private LocalDateTime transactionDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "transaction_event", length = 100)
     private TransactionEvent transactionEvent;
 }

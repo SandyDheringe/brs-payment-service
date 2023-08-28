@@ -5,11 +5,13 @@ import com.brspayment.messages.BookingMessage;
 import com.brspayment.messages.BusBookingMessage;
 import com.brspayment.messages.MessageBroker;
 import com.brspayment.messages.MessageDestinationConst;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 public class PaymentService {
@@ -19,22 +21,27 @@ public class PaymentService {
 
     private final MessageBroker messageBroker;
     private final TransactionRepository transactionRepository;
-
+private final ObjectMapper objectMapper;
     @Autowired
     PaymentService(PaymentRepository paymentRepository,
                    MessageBroker messageBroker,
-                   TransactionRepository transactionRepository) {
+                   TransactionRepository transactionRepository, ObjectMapper objectMapper) {
         this.paymentRepository = paymentRepository;
         this.messageBroker = messageBroker;
         this.transactionRepository = transactionRepository;
+        this.objectMapper = objectMapper;
     }
 
     @JmsListener(destination = MessageDestinationConst.DEST_PROCESS_PAYMENT)
-    public void receiveMessage(BookingMessage bookingMessage) {
+    public void receiveMessage(Map<String, Object> object) {
+
+        final BookingMessage bookingMessage = objectMapper.convertValue(object, BookingMessage.class);
+        System.out.println("Received message: " + bookingMessage);
+
         Payment payment = new Payment();
         payment.setBookingId(bookingMessage.getBookingId());
         payment.setPaymentDate(LocalDateTime.now());
-        payment.setPaymentAmount(100f);
+        payment.setPaymentAmount(bookingMessage.getBookingAmount());
         payment.setPaymentStatus(PaymentStatus.PENDING);
         payment.setPaymentMethod(PaymentMethod.UPI);
         paymentRepository.save(payment);
