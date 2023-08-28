@@ -33,7 +33,7 @@ private final ObjectMapper objectMapper;
     }
 
     @JmsListener(destination = MessageDestinationConst.DEST_PROCESS_PAYMENT)
-    public void receiveMessage(Map<String, Object> object) {
+    public void initiatePayment(Map<String, Object> object) {
 
         final BookingMessage bookingMessage = objectMapper.convertValue(object, BookingMessage.class);
         System.out.println("Received message: " + bookingMessage);
@@ -44,7 +44,7 @@ private final ObjectMapper objectMapper;
         payment.setPaymentAmount(bookingMessage.getBookingAmount());
         payment.setPaymentStatus(PaymentStatus.PENDING);
         payment.setPaymentMethod(PaymentMethod.UPI);
-        paymentRepository.save(payment);
+        paymentRepository.saveAndFlush(payment);
     }
 
     public void processPayment(PaymentRequest paymentRequest) {
@@ -69,4 +69,16 @@ private final ObjectMapper objectMapper;
                 new BusBookingMessage(paymentRequest.getBookingId(), paymentRequest.getBusId()));
 
     }
+
+    @JmsListener(destination = MessageDestinationConst.DEST_INITIATE_PAYMENT_REFUND)
+    public void initiateRefund(Map<String, Object> object) {
+        final BookingMessage bookingMessage = objectMapper.convertValue(object, BookingMessage.class);
+        System.out.println("Received message: " + bookingMessage);
+        Payment payment = paymentRepository.findByBookingId(bookingMessage.getBookingId()).orElse(null);
+        if(payment !=null) {
+            payment.setPaymentStatus(PaymentStatus.REFUND_INITIATED);
+            paymentRepository.saveAndFlush(payment);
+        }
+    }
+
 }

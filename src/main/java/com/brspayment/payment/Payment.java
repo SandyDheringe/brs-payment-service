@@ -29,11 +29,11 @@ public class Payment {
     private Float paymentAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_status", length = 10)
+    @Column(name = "payment_status", length = 50)
     private PaymentStatus paymentStatus;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method", length = 20)
+    @Column(name = "payment_method", length = 50)
     private PaymentMethod paymentMethod;
 
 
