@@ -3,6 +3,7 @@ package com.brspayment;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jms.DefaultJmsListenerContainerFactoryConfigurer;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
@@ -19,6 +20,10 @@ import java.util.HashMap;
 public class BrsPaymentServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(BrsPaymentServiceApplication.class, args);
+//        SpringApplication.run(BrsPaymentServiceApplication.class, args);
+        new SpringApplicationBuilder()
+                .profiles("dev")
+                .sources(BrsPaymentServiceApplication.class)
+                .run(args);
     }
 }
