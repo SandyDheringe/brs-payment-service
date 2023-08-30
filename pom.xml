@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.brspayment</groupId>
     <artifactId>brs-payment-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>brs-payment-service</name>
     <description>brs-payment-service</description>
     <properties>
