@@ -22,7 +22,7 @@ public class BrsPaymentServiceApplication {
     public static void main(String[] args) {
 //        SpringApplication.run(BrsPaymentServiceApplication.class, args);
         new SpringApplicationBuilder()
-                .profiles("dev")
+                .profiles("prod")
                 .sources(BrsPaymentServiceApplication.class)
                 .run(args);
     }
